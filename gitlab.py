@@ -1,21 +1,18 @@
-import gitlab
 import requests
+import json
 
-# Initialize GitLab connection
-gl = gitlab.Gitlab('https://gitlab.example.com', private_token='your_token')
-
-# Get project
-project = gl.projects.get('project_id')
-
-# Get all repositories (if it's a group)
-group = gl.groups.get('group_id')
-projects = group.projects.list(all=True)
-
-# Get commits from each project
-for proj in projects:
-    print(f"=== Repository: {proj.name} ===")
-    project_obj = gl.projects.get(proj.id)
-    commits = project_obj.commits.list(per_page=50)
+def get_commits(gitlab_url, token, project_id):
+    headers = {'PRIVATE-TOKEN': token}
+    url = f"{gitlab_url}/api/v4/projects/{project_id}/repository/commits"
     
-    for commit in commits:
-        print(f"{commit.short_id} - {commit.title} - {commit.author_name}")
+    response = requests.get(url, headers=headers)
+    
+    if response.status_code == 200:
+        commits = response.json()
+        for commit in commits:
+            print(f"{commit['short_id']} - {commit['title']} - {commit['author_name']}")
+    else:
+        print(f"Error: {response.status_code} - {response.text}")
+
+# Usage
+get_commits('https://gitlab.com', 'your_token', 'your_project_id')
